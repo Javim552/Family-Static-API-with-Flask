@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint, json
-from api.models import db, User
+from api.models import db, User, Family
 from api.utils import generate_sitemap, APIException
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -15,13 +15,21 @@ from flask_jwt_extended import JWTManager
 
 api = Blueprint('api', __name__)
 
+@api.route('/hello', methods=['GET'])
+def hello():
+    response_body = {
+        "message": "Usuario Creado"
+    }
+    return jsonify(response_body)
+
 @api.route('/signup', methods=['POST'])
 def signup():
     data = request.data
     data = json.loads (data)
-    user = User(email = data["email"], 
+    user = User(email = data["email"],
     password = data["password"],
-    is_active = data["is_active"])
+    is_active = data["is_active"]
+    )
     db.session.add(user)
     db.session.commit()
     response_body = {
@@ -34,6 +42,7 @@ def signup():
 
 @api.route('/login', methods=["POST"])
 def login():
+    
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     user = User.query.filter_by(email=email, password=password).first()
@@ -64,5 +73,44 @@ def private():
     return jsonify(response_body), 200
 
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>> RUTAS PARA FAMILIA <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+@api.route("/family", methods=["POST"])
+def crear_miembro_familia():
+    data = request.json
+    family = Family(
+    nombre = data["nombre"], 
+    apellidos = data["apellidos"],
+    edad = data["edad"],)
+    db.session.add(family)
+    db.session.commit()
+
+    response_body = {
+    "message": "miembro agregado"
+    }
+    return jsonify(response_body)
+
+# @api.route("/family", methods=['DELETE'])
+# def borrar_miembro_familia():
+#    data = request.data
+#    data = json.loads(data)
+#    family = Family(
+#    nombre = data ["nombre"],
+#    apellidos = data ["apellidos"],
+#    edad = data["edad"])
    
+#    db.session.delete(family)
+#    db.session.commit()
+   
+#    response_body = {
+#       "msg": "borrando miembro"
+#    },
+#    return jsonify(family), 200
+
+@api.route('/family', methods=['GET'])
+def mostrar_miembro_familia():
+
+    familyAll = Family.query.all ()
+    resultado = []
+    resultado = [family.serialize () for family in familyAll]
+    return jsonify(resultado),200
